@@ -28,12 +28,17 @@ const (
 	itemEOF
 
 	itemCheckStart
+
 	itemCheckProcess
+	itemCheckFile
 
 	itemInsideCheckProcess_Name
 	itemInsideCheckProcess_Pid
 	itemInsideCheckProcess_StartMethod
 	itemInsideCheckProcess_StopMethod
+
+	itemInsideCheckFile_Name
+	itemInsideCheckFile_Path
 
 	itemStartCheckProcess
 	itemEndCheckProcess

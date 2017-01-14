@@ -114,4 +114,67 @@ var _ = FDescribe("Lex/ServiceChecks", func() {
 			})
 		})
 	})
+
+	Context("Check File", func() {
+		It("Should scan check file", func() {
+			lex := act("check file unique-name path /tmp/test")
+
+			nextLexFn := ServiceCheckStart(lex)
+			Expect(lex.pos).To(Equal(6))
+			Expect(lex.items).To(Receive(Equal(Item{Type: itemCheckStart, Value: "check"})))
+
+			Expect(nextLexFn).ToNot(BeNil())
+			nextLexFn = nextLexFn(lex)
+			Expect(lex.pos).To(Equal(11))
+			Expect(lex.items).To(Receive(Equal(Item{Type: itemCheckFile, Value: "file"})))
+
+			Expect(nextLexFn).ToNot(BeNil())
+			nextLexFn = nextLexFn(lex)
+			Expect(lex.pos).To(Equal(23))
+			Expect(lex.items).To(Receive(Equal(Item{Type: itemInsideCheckFile_Name, Value: "unique-name"})))
+
+			Expect(nextLexFn).ToNot(BeNil())
+			nextLexFn = nextLexFn(lex)
+			Expect(lex.items).To(Receive(Equal(Item{Type: itemInsideCheckFile_Path, Value: "/tmp/test"})))
+			Expect(nextLexFn).To(BeNil())
+		})
+
+		Context("With service methods", func() {
+			It("should scan check file with service methods", func() {
+				lex := act(`check file unique-name path /tmp/test
+  start program = "/usr/local/mmonit/bin/mmonit" as uid "mmonit" and gid "mmonit"
+  stop program = "/usr/local/mmonit/bin/mmonit stop" as uid "mmonit" and gid "mmonit"`)
+
+				nextLexFn := ServiceCheckStart(lex)
+
+				var nextItem Item
+				Expect(lex.items).To(Receive(&nextItem))
+				Expect(nextItem.Type).To(Equal(itemCheckStart))
+
+				nextLexFn = nextLexFn(lex)
+				Expect(nextLexFn).ToNot(BeNil())
+				Expect(lex.items).To(Receive(&nextItem))
+				Expect(nextItem.Type).To(Equal(itemCheckFile))
+
+				nextLexFn = nextLexFn(lex)
+				Expect(nextLexFn).ToNot(BeNil())
+				Expect(lex.items).To(Receive(&nextItem))
+				Expect(nextItem.Type).To(Equal(itemInsideCheckFile_Name))
+
+				nextLexFn = nextLexFn(lex)
+				Expect(nextLexFn).ToNot(BeNil())
+				Expect(lex.items).To(Receive(&nextItem))
+				Expect(nextItem.Type).To(Equal(itemInsideCheckFile_Path))
+
+				nextLexFn = nextLexFn(lex)
+				Expect(nextLexFn).ToNot(BeNil())
+				Expect(lex.items).To(Receive(Equal(Item{Type: itemInsideCheckProcess_StartMethod, Value: `start program = "/usr/local/mmonit/bin/mmonit" as uid "mmonit" and gid "mmonit"`})))
+
+				nextLexFn = nextLexFn(lex)
+				Expect(nextLexFn).ToNot(BeNil())
+				Expect(lex.items).To(Receive(Equal(Item{Type: itemInsideCheckProcess_StopMethod, Value: `stop program = "/usr/local/mmonit/bin/mmonit stop" as uid "mmonit" and gid "mmonit"`})))
+			})
+		})
+	})
+
 })
