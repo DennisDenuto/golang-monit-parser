@@ -176,5 +176,4 @@ var _ = FDescribe("Lex/ServiceChecks", func() {
 			})
 		})
 	})
-
 })
