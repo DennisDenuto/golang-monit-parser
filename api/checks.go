@@ -3,13 +3,20 @@ package api
 type ProcessCheck struct {
 	Name           string
 	Pidfile        string
-	StartProgram   string
-	StopProgram    string
+	StartProgram   CheckProgram
+	StopProgram    CheckProgram
 	FailedSocket   FailedSocket
 	FailedHost     FailedHost
 	TotalMemChecks []MemUsage
 	Group          string
 	DependsOn      string
+}
+
+
+type CheckProgram struct {
+	Path string
+	Uid string
+	Gid string
 }
 
 type FileCheck struct {
@@ -44,6 +51,3 @@ type MemUsage struct {
 	NumCycles int
 	Action    string
 }
-
-
-

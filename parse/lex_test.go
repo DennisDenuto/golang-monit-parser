@@ -21,7 +21,7 @@ var _ = Describe("Lex", func() {
 
 			items := act("check process abc")
 
-			Eventually(items).Should(Receive(Equal(Item{Type: itemCheckProcess})))
+			Eventually(items).Should(Receive())
 		})
 	})
 

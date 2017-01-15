@@ -24,8 +24,8 @@ const (
 
 const (
 	itemError itemType = iota // error occurred;
-	itemDot                   // the cursor, spelled '.'
 	itemEOF
+	itemStringValue
 
 	itemCheckStart
 
@@ -34,29 +34,17 @@ const (
 
 	itemInsideCheckProcess_Name
 	itemInsideCheckProcess_Pid
-	itemInsideCheckProcess_StartMethod
-	itemInsideCheckProcess_StopMethod
+	itemInsideCheckProcess_ProgramMethodStringValue
+
+	itemInsideCheckProcess_StartProgramMethod
+	itemInsideCheckProcess_ProgramMethodUid
+	itemInsideCheckProcess_ProgramMethodGid
+
+	itemInsideCheckProcess_StopProgramMethod
+	itemInsideCheckProcess_ProgramMethodPath
 
 	itemInsideCheckFile_Name
 	itemInsideCheckFile_Path
-
-	itemStartCheckProcess
-	itemEndCheckProcess
-
-	itemChekEnd
-
-	itemElse        // else keyword
-	itemEnd         // end keyword
-	itemField       // identifier, starting with '.'
-	itemIdentifier  // identifier
-	itemIf          // if keyword
-	itemNumber      // number
-	itemPipe        // pipe symbol
-	itemRange       // range keyword
-	itemRawString   // raw quoted string (includes quotes)
-
-	itemString  // quoted string (includes quotes)
-	itemText    // plain text
 )
 
 func (i Item) String() string {
@@ -98,49 +86,10 @@ func Lex(name, input string) (*lexer, chan Item) {
 // run lexes the input by executing state functions until
 // the state is nil.
 func (l *lexer) run() {
-	for state := lexText; state != nil; {
+	for state := ServiceCheckStart; state != nil; {
 		state = state(l)
 	}
 	close(l.items) // No more tokens will be delivered.
-}
-
-func lexText(l *lexer) stateFn {
-	for {
-		if strings.HasPrefix(l.input[l.pos:], "{{") {
-			if l.pos > l.start {
-				l.emit(itemText)
-			}
-			return lexLeftMeta // Next state.
-		}
-		if l.next() == eof {
-			break
-		}
-	}
-	// Correctly reached EOF.
-	if l.pos > l.start {
-		l.emit(itemText)
-	}
-	l.emit(itemEOF) // Useful to make EOF a token.
-	return nil      // Stop the run loop.
-}
-
-func lexLeftMeta(l *lexer) stateFn {
-	l.pos += len("{{")
-	l.emit(itemCheckStart)
-	return lexInsideCheckAction // Now inside {{ }}.
-}
-
-func lexInsideCheckAction(l *lexer) stateFn {
-	for {
-		switch r := l.next(); {
-		case r == eof || r == '\n':
-			return l.errorf("unclosed action")
-
-		case r == ' ':
-			l.emit(itemPipe)
-		}
-	}
-	return nil
 }
 
 // next returns the next rune in the input.
@@ -153,6 +102,16 @@ func (l *lexer) next() (rune rune) {
 	rune, l.width = utf8.DecodeRuneInString(l.input[l.pos:])
 
 	l.pos += l.width
+	return rune
+}
+
+func (l *lexer) current() (rune rune) {
+	if l.pos >= len(l.input) {
+		l.width = 0
+		return eof
+	}
+
+	rune, l.width = utf8.DecodeRuneInString(l.input[l.pos-1:l.pos])
 	return rune
 }
 
@@ -214,6 +173,12 @@ func (l *lexer) skipWhiteSpaces() {
 // Can be called only once per call of next.
 func (l *lexer) backup() {
 	l.pos -= l.width
+}
+
+func (l *lexer) peek() rune {
+	rune := l.next()
+	l.backup()
+	return rune
 }
 
 // isSpace reports whether r is a space character.

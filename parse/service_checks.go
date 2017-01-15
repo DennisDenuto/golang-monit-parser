@@ -114,7 +114,6 @@ func ServiceInsideCheckPath(l *lexer) stateFn {
 	return nil
 }
 
-
 func ServiceInsideCheckProcessPid(l *lexer) stateFn {
 	for {
 		switch nextRune := l.next(); {
@@ -139,17 +138,81 @@ func ServiceInsideCheckProcessPid(l *lexer) stateFn {
 }
 
 func ServiceInsideCheckProcessMethods(l *lexer) stateFn {
-	if strings.HasPrefix(l.input[l.pos:], "start") {
-		l.acceptUntilEndOfLine()
-		l.emit(itemInsideCheckProcess_StartMethod)
-		l.skipWhiteSpaces()
+	if strings.HasPrefix(l.input[l.pos:], "start") || strings.HasPrefix(l.input[l.pos:], "stop") {
+		localItemInsideCheckProcessProgramMethod := itemInsideCheckProcess_StartProgramMethod
+
+		if strings.HasPrefix(l.input[l.pos:], "stop") {
+			localItemInsideCheckProcessProgramMethod = itemInsideCheckProcess_StopProgramMethod
+		}
+
+		for {
+			switch nextRune := l.next(); {
+			case isAlphaNumeric(nextRune):
+			case nextRune == '=':
+				l.backup()
+				for {
+					if isSpace(l.current()) {
+						l.backup()
+					} else {
+						break
+					}
+				}
+
+				l.emit(localItemInsideCheckProcessProgramMethod)
+				l.emit(itemInsideCheckProcess_ProgramMethodPath)
+				l.acceptRun(" =")
+				l.ignore()
+
+				return ServiceInsideCheckProcessMethodsStringValue
+			case isEndOfLine(nextRune) || isEof(nextRune):
+				return l.errorf("check process start missing '='", l.input[l.start:l.pos])
+			}
+		}
+
 		return ServiceInsideCheckProcessMethods
 	}
-	if strings.HasPrefix(l.input[l.pos:], "stop") {
-		l.acceptUntilEndOfLine()
-		l.emit(itemInsideCheckProcess_StopMethod)
+	if strings.HasPrefix(l.input[l.pos:], "as") {
+		l.pos += len("as")
 		l.skipWhiteSpaces()
-		return ServiceInsideCheckProcessMethods
+		l.ignore()
+		switch {
+		case strings.HasPrefix(l.input[l.pos:], "uid"):
+			l.pos += len("uid")
+			l.emit(itemInsideCheckProcess_ProgramMethodUid)
+			l.skipWhiteSpaces()
+			return ServiceInsideCheckProcessMethodsStringValue
+		}
 	}
+	if strings.HasPrefix(l.input[l.pos:], "and") {
+		l.pos += len("and")
+		l.skipWhiteSpaces()
+		l.ignore()
+		switch {
+		case strings.HasPrefix(l.input[l.pos:], "gid"):
+			l.pos += len("gid")
+			l.emit(itemInsideCheckProcess_ProgramMethodGid)
+			l.skipWhiteSpaces()
+			return ServiceInsideCheckProcessMethodsStringValue
+		}
+	}
+
 	return nil
+}
+
+func ServiceInsideCheckProcessMethodsStringValue(l *lexer) stateFn {
+	if l.next() != '"' {
+		return l.errorf("check process missing value")
+	}
+
+	for {
+		switch nextRune := l.next(); {
+		case isEndOfLine(nextRune) || isEof(nextRune):
+			return l.errorf("check process missing value %s", l.input[l.pos:])
+		case nextRune == '"':
+			l.emit(itemInsideCheckProcess_ProgramMethodStringValue)
+			l.skipWhiteSpaces()
+			return ServiceInsideCheckProcessMethods
+		}
+	}
+	return ServiceInsideCheckProcessMethods
 }
