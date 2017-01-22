@@ -60,4 +60,35 @@ var _ = Describe("Parse", func() {
 			})
 		})
 	})
+
+	Context("Monit file with multiple process checks", func() {
+		It("should build monit tree with check process", func() {
+
+			monitFileContents := `check process short_process
+  pidfile /path/to/short/pid
+
+check process another_process
+  with pidfile /path/to/another/pid
+  start program = "/path/to/short/start/command"`
+
+			_, items := Lex("test", monitFileContents)
+
+			monitFileParsed := parser.Parse(items)
+			Expect(monitFileParsed).ToNot(BeNil())
+			Expect(monitFileParsed.CheckProcesses).ToNot(BeNil())
+			Expect(monitFileParsed.CheckProcesses).To(ConsistOf(
+				api.ProcessCheck{
+					Name:    "short_process",
+					Pidfile: "/path/to/short/pid",
+				},
+				api.ProcessCheck{
+					Name:         "another_process",
+					Pidfile:      "/path/to/another/pid",
+					StartProgram: api.CheckProgram{Path: "/path/to/short/start/command"},
+				},
+			))
+		})
+
+	})
+
 })

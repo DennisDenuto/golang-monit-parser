@@ -62,6 +62,30 @@ var _ = Describe("Lex/ServiceChecks", func() {
 			Expect(lex.pos).To(Equal(30))
 		})
 
+		It("Should scan check process with process file using with keyword", func() {
+			lex := act(`check process abc
+  with pidfile /tmp`)
+
+			nextLexFn := ServiceCheckStart(lex)
+			Expect(lex.pos).To(Equal(6))
+			Expect(lex.items).To(Receive(Equal(Item{Type: itemCheckStart, Value: "check"})))
+
+			Expect(nextLexFn).ToNot(BeNil())
+			nextLexFn = nextLexFn(lex)
+			Expect(lex.pos).To(Equal(14))
+			Expect(lex.items).To(Receive(Equal(Item{Type: itemCheckProcess, Value: "process"})))
+
+			Expect(nextLexFn).ToNot(BeNil())
+			nextLexFn = nextLexFn(lex)
+			Expect(lex.pos).To(Equal(20))
+			Expect(lex.items).To(Receive(Equal(Item{Type: itemInsideCheckProcess_Name, Value: "abc"})))
+
+			Expect(nextLexFn).ToNot(BeNil())
+			nextLexFn = nextLexFn(lex)
+			Expect(lex.items).To(Receive(Equal(Item{Type: itemInsideCheckProcess_Pid, Value: "with pidfile /tmp"})))
+			Expect(lex.pos).To(Equal(37))
+		})
+
 		It("Should scan check process with process regex", func() {
 			lex := act("check process abc matching foobar.*")
 

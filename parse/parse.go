@@ -19,9 +19,11 @@ func (Parser) Parse(items chan Item) MonitFileParsed {
 		case itemCheckProcess:
 			monitFileParsed.CheckProcesses = append(monitFileParsed.CheckProcesses, api.ProcessCheck{})
 		case itemInsideCheckProcess_Name:
-			monitFileParsed.CheckProcesses[0].Name = item.Value
+			check := monitFileParsed.CheckProcesses.GetLast()
+			check.Name = item.Value
 		case itemInsideCheckProcess_Pid:
-			monitFileParsed.CheckProcesses[0].Pidfile = item.Value[8:]
+			check := monitFileParsed.CheckProcesses.GetLast()
+			check.Pidfile = removeNoiseKeyword(item.Value)[len("pidfile "):]
 		case itemInsideCheckProcess_StartProgramMethod:
 			<-items
 			pathValue := <-items
@@ -29,10 +31,11 @@ func (Parser) Parse(items chan Item) MonitFileParsed {
 			uid := <-items
 			<-items
 			gid := <-items
-			monitFileParsed.CheckProcesses[0].StartProgram = api.CheckProgram{
-				Path: strings.Replace(pathValue.Value, `"`, "", -1),
-				Uid:  strings.Replace(uid.Value, `"`, "", -1),
-				Gid:  strings.Replace(gid.Value, `"`, "", -1),
+			check := monitFileParsed.CheckProcesses.GetLast()
+			check.StartProgram = api.CheckProgram{
+				Path: stripQuotes(pathValue.Value),
+				Uid:  stripQuotes(uid.Value),
+				Gid:  stripQuotes(gid.Value),
 			}
 		case itemInsideCheckProcess_StopProgramMethod:
 			<-items
@@ -41,10 +44,11 @@ func (Parser) Parse(items chan Item) MonitFileParsed {
 			uid := <-items
 			<-items
 			gid := <-items
-			monitFileParsed.CheckProcesses[0].StopProgram = api.CheckProgram{
-				Path: strings.Replace(pathValue.Value, `"`, "", -1),
-				Uid:  strings.Replace(uid.Value, `"`, "", -1),
-				Gid:  strings.Replace(gid.Value, `"`, "", -1),
+			check := monitFileParsed.CheckProcesses.GetLast()
+			check.StopProgram = api.CheckProgram{
+				Path: stripQuotes(pathValue.Value),
+				Uid:  stripQuotes(uid.Value),
+				Gid:  stripQuotes(gid.Value),
 			}
 
 		}
@@ -53,6 +57,23 @@ func (Parser) Parse(items chan Item) MonitFileParsed {
 	return monitFileParsed
 }
 
+/*
+noise keywords like 'if', 'and', 'with(in)', 'has', 'us(ing|e)', 'on(ly)', 'then', 'for', 'of'
+ */
+func removeNoiseKeyword(val string) string {
+	return strings.TrimPrefix(val, "with ")
+}
+
+func stripQuotes(val string) string {
+	return strings.Replace(val, `"`, "", -1)
+}
+
+type ProcessChecks []api.ProcessCheck
+
+func (pc ProcessChecks) GetLast() *api.ProcessCheck {
+	return &pc[len(pc) - 1]
+}
+
 type MonitFileParsed struct {
-	CheckProcesses []api.ProcessCheck
+	CheckProcesses ProcessChecks
 }

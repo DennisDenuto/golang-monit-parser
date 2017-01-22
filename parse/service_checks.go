@@ -5,6 +5,7 @@ import (
 )
 
 func ServiceCheckStart(l *lexer) stateFn {
+	l.skipWhiteSpaces()
 	l.pos += len("check")
 	l.emit(itemCheckStart)
 
@@ -52,7 +53,7 @@ func ServiceInsideCheckProcess(l *lexer) stateFn {
 			l.backup()
 			l.emit(itemInsideCheckProcess_Name)
 			l.skipWhiteSpaces()
-			return nil
+			return ServiceInsideCheckProcessPid
 		case isEof(nextRune):
 			l.emit(itemInsideCheckProcess_Name)
 			return nil

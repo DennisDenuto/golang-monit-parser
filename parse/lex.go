@@ -164,6 +164,16 @@ func (l *lexer) acceptUntilEndOfLine() {
 	l.backup()
 }
 
+func (l *lexer) acceptUntilSpace() {
+	for {
+		next := l.next()
+		if isSpace(next) || isEof(next) {
+			break
+		}
+	}
+	l.backup()
+}
+
 func (l *lexer) skipWhiteSpaces() {
 	l.pos += leftTrimLength(l.input[l.pos:])
 	l.ignore()
