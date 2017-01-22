@@ -196,24 +196,38 @@ func ServiceInsideCheckProcessMethods(l *lexer) stateFn {
 			return ServiceInsideCheckProcessMethodsStringValue
 		}
 	}
-
+	if strings.HasPrefix(l.input[l.pos:], "group") {
+		l.pos += len("group")
+		l.emit(itemInsideCheckProcess_ProgramMethodGroupName)
+		l.skipWhiteSpaces()
+		return ServiceInsideCheckProcessMethodsStringValue
+	}
 	return nil
 }
 
+
+/*
+Strings can be either quoted or unquoted. A quoted string is bounded by double quotes and may contain whitespace (and quoted digits are treated as a string). An unquoted string is any whitespace-delimited token, containing characters and/or numbers.
+ */
 func ServiceInsideCheckProcessMethodsStringValue(l *lexer) stateFn {
-	if l.next() != '"' {
-		return l.errorf("check process missing value")
+	next := l.next()
+	if next == '"' {
+		for {
+			switch nextRune := l.next(); {
+			case isEndOfLine(nextRune) || isEof(nextRune):
+				return l.errorf("check process missing value %s", l.input[l.pos:])
+			case nextRune == '"':
+				l.emit(itemInsideCheckProcess_ProgramMethodQuotedStringValue)
+				l.skipWhiteSpaces()
+				return ServiceInsideCheckProcessMethods
+			}
+		}
+	} else if isAlphaNumeric(next) {
+		l.acceptUntilSpace()
+		l.emit(itemInsideCheckProcess_ProgramMethodUnQuotedStringValue)
+		l.skipWhiteSpaces()
+		return ServiceInsideCheckProcessMethods
 	}
 
-	for {
-		switch nextRune := l.next(); {
-		case isEndOfLine(nextRune) || isEof(nextRune):
-			return l.errorf("check process missing value %s", l.input[l.pos:])
-		case nextRune == '"':
-			l.emit(itemInsideCheckProcess_ProgramMethodStringValue)
-			l.skipWhiteSpaces()
-			return ServiceInsideCheckProcessMethods
-		}
-	}
 	return ServiceInsideCheckProcessMethods
 }

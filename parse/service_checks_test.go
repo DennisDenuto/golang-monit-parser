@@ -113,7 +113,8 @@ var _ = Describe("Lex/ServiceChecks", func() {
 			It("should scan check process with service methods", func() {
 				lex := act(`check process abc matching foobar.*
   start program = "/usr/local/mmonit/bin/mmonit" as uid "mmonit" and gid "mmonit"
-  stop program = "/usr/local/mmonit/bin/mmonit stop" as uid "stop_mmonit" and gid "stop_mmonit"`)
+  stop program = "/usr/local/mmonit/bin/mmonit stop" as uid "stop_mmonit" and gid "stop_mmonit"
+  group group_name`)
 
 				nextLexFn := ServiceCheckStart(lex)
 				Expect(lex.items).To(Receive())
@@ -137,7 +138,7 @@ var _ = Describe("Lex/ServiceChecks", func() {
 
 				Expect(nextLexFn).ToNot(BeNil())
 				nextLexFn = nextLexFn(lex)
-				Expect(lex.items).To(Receive(Equal(Item{Type: itemInsideCheckProcess_ProgramMethodStringValue, Value: `"/usr/local/mmonit/bin/mmonit"`})))
+				Expect(lex.items).To(Receive(Equal(Item{Type: itemInsideCheckProcess_ProgramMethodQuotedStringValue, Value: `"/usr/local/mmonit/bin/mmonit"`})))
 
 				Expect(nextLexFn).ToNot(BeNil())
 				nextLexFn = nextLexFn(lex)
@@ -145,7 +146,7 @@ var _ = Describe("Lex/ServiceChecks", func() {
 
 				Expect(nextLexFn).ToNot(BeNil())
 				nextLexFn = nextLexFn(lex)
-				Expect(lex.items).To(Receive(Equal(Item{Type: itemInsideCheckProcess_ProgramMethodStringValue, Value: `"mmonit"`})))
+				Expect(lex.items).To(Receive(Equal(Item{Type: itemInsideCheckProcess_ProgramMethodQuotedStringValue, Value: `"mmonit"`})))
 
 				Expect(nextLexFn).ToNot(BeNil())
 				nextLexFn = nextLexFn(lex)
@@ -153,7 +154,7 @@ var _ = Describe("Lex/ServiceChecks", func() {
 
 				Expect(nextLexFn).ToNot(BeNil())
 				nextLexFn = nextLexFn(lex)
-				Expect(lex.items).To(Receive(Equal(Item{Type: itemInsideCheckProcess_ProgramMethodStringValue, Value: `"mmonit"`})))
+				Expect(lex.items).To(Receive(Equal(Item{Type: itemInsideCheckProcess_ProgramMethodQuotedStringValue, Value: `"mmonit"`})))
 
 				Expect(nextLexFn).ToNot(BeNil())
 				nextLexFn = nextLexFn(lex)
@@ -165,7 +166,7 @@ var _ = Describe("Lex/ServiceChecks", func() {
 
 				Expect(nextLexFn).ToNot(BeNil())
 				nextLexFn = nextLexFn(lex)
-				Expect(lex.items).To(Receive(Equal(Item{Type: itemInsideCheckProcess_ProgramMethodStringValue, Value: `"/usr/local/mmonit/bin/mmonit stop"`})))
+				Expect(lex.items).To(Receive(Equal(Item{Type: itemInsideCheckProcess_ProgramMethodQuotedStringValue, Value: `"/usr/local/mmonit/bin/mmonit stop"`})))
 
 				Expect(nextLexFn).ToNot(BeNil())
 				nextLexFn = nextLexFn(lex)
@@ -173,14 +174,17 @@ var _ = Describe("Lex/ServiceChecks", func() {
 
 				Expect(nextLexFn).ToNot(BeNil())
 				nextLexFn = nextLexFn(lex)
-				Expect(lex.items).To(Receive(Equal(Item{Type: itemInsideCheckProcess_ProgramMethodStringValue, Value: `"stop_mmonit"`})))
+				Expect(lex.items).To(Receive(Equal(Item{Type: itemInsideCheckProcess_ProgramMethodQuotedStringValue, Value: `"stop_mmonit"`})))
 
 				Expect(nextLexFn).ToNot(BeNil())
 				nextLexFn = nextLexFn(lex)
 				Expect(lex.items).To(Receive(Equal(Item{Type: itemInsideCheckProcess_ProgramMethodGid, Value: "gid"})))
-				Expect(lex.items).To(Receive(Equal(Item{Type: itemInsideCheckProcess_ProgramMethodStringValue, Value: `"stop_mmonit"`})))
+				Expect(lex.items).To(Receive(Equal(Item{Type: itemInsideCheckProcess_ProgramMethodQuotedStringValue, Value: `"stop_mmonit"`})))
 
-				Expect(nextLexFn).To(BeNil())
+				Expect(nextLexFn).ToNot(BeNil())
+				nextLexFn = nextLexFn(lex)
+				Expect(lex.items).To(Receive(Equal(Item{Type: itemInsideCheckProcess_ProgramMethodGroupName, Value: "group"})))
+				Expect(lex.items).To(Receive(Equal(Item{Type: itemInsideCheckProcess_ProgramMethodUnQuotedStringValue, Value: "group_name"})))
 
 			})
 		})
@@ -247,7 +251,7 @@ var _ = Describe("Lex/ServiceChecks", func() {
 
 				Expect(nextLexFn).ToNot(BeNil())
 				nextLexFn = nextLexFn(lex)
-				Expect(lex.items).To(Receive(Equal(Item{Type: itemInsideCheckProcess_ProgramMethodStringValue, Value: `"/usr/local/mmonit/bin/mmonit"`})))
+				Expect(lex.items).To(Receive(Equal(Item{Type: itemInsideCheckProcess_ProgramMethodQuotedStringValue, Value: `"/usr/local/mmonit/bin/mmonit"`})))
 
 				Expect(nextLexFn).ToNot(BeNil())
 				nextLexFn = nextLexFn(lex)
@@ -255,7 +259,7 @@ var _ = Describe("Lex/ServiceChecks", func() {
 
 				Expect(nextLexFn).ToNot(BeNil())
 				nextLexFn = nextLexFn(lex)
-				Expect(lex.items).To(Receive(Equal(Item{Type: itemInsideCheckProcess_ProgramMethodStringValue, Value: `"mmonit"`})))
+				Expect(lex.items).To(Receive(Equal(Item{Type: itemInsideCheckProcess_ProgramMethodQuotedStringValue, Value: `"mmonit"`})))
 
 				Expect(nextLexFn).ToNot(BeNil())
 				nextLexFn = nextLexFn(lex)
@@ -263,7 +267,7 @@ var _ = Describe("Lex/ServiceChecks", func() {
 
 				Expect(nextLexFn).ToNot(BeNil())
 				nextLexFn = nextLexFn(lex)
-				Expect(lex.items).To(Receive(Equal(Item{Type: itemInsideCheckProcess_ProgramMethodStringValue, Value: `"mmonit"`})))
+				Expect(lex.items).To(Receive(Equal(Item{Type: itemInsideCheckProcess_ProgramMethodQuotedStringValue, Value: `"mmonit"`})))
 
 				Expect(nextLexFn).ToNot(BeNil())
 				nextLexFn = nextLexFn(lex)
@@ -275,7 +279,7 @@ var _ = Describe("Lex/ServiceChecks", func() {
 
 				Expect(nextLexFn).ToNot(BeNil())
 				nextLexFn = nextLexFn(lex)
-				Expect(lex.items).To(Receive(Equal(Item{Type: itemInsideCheckProcess_ProgramMethodStringValue, Value: `"/usr/local/mmonit/bin/mmonit stop"`})))
+				Expect(lex.items).To(Receive(Equal(Item{Type: itemInsideCheckProcess_ProgramMethodQuotedStringValue, Value: `"/usr/local/mmonit/bin/mmonit stop"`})))
 
 				Expect(nextLexFn).ToNot(BeNil())
 				nextLexFn = nextLexFn(lex)
@@ -283,12 +287,12 @@ var _ = Describe("Lex/ServiceChecks", func() {
 
 				Expect(nextLexFn).ToNot(BeNil())
 				nextLexFn = nextLexFn(lex)
-				Expect(lex.items).To(Receive(Equal(Item{Type: itemInsideCheckProcess_ProgramMethodStringValue, Value: `"stop_mmonit"`})))
+				Expect(lex.items).To(Receive(Equal(Item{Type: itemInsideCheckProcess_ProgramMethodQuotedStringValue, Value: `"stop_mmonit"`})))
 
 				Expect(nextLexFn).ToNot(BeNil())
 				nextLexFn = nextLexFn(lex)
 				Expect(lex.items).To(Receive(Equal(Item{Type: itemInsideCheckProcess_ProgramMethodGid, Value: "gid"})))
-				Expect(lex.items).To(Receive(Equal(Item{Type: itemInsideCheckProcess_ProgramMethodStringValue, Value: `"stop_mmonit"`})))
+				Expect(lex.items).To(Receive(Equal(Item{Type: itemInsideCheckProcess_ProgramMethodQuotedStringValue, Value: `"stop_mmonit"`})))
 
 				Expect(nextLexFn).To(BeNil())
 			})

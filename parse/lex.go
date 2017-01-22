@@ -34,11 +34,13 @@ const (
 
 	itemInsideCheckProcess_Name
 	itemInsideCheckProcess_Pid
-	itemInsideCheckProcess_ProgramMethodStringValue
+	itemInsideCheckProcess_ProgramMethodQuotedStringValue
+	itemInsideCheckProcess_ProgramMethodUnQuotedStringValue
 
 	itemInsideCheckProcess_StartProgramMethod
 	itemInsideCheckProcess_ProgramMethodUid
 	itemInsideCheckProcess_ProgramMethodGid
+	itemInsideCheckProcess_ProgramMethodGroupName
 
 	itemInsideCheckProcess_StopProgramMethod
 	itemInsideCheckProcess_ProgramMethodPath
