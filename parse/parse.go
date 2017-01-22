@@ -31,8 +31,8 @@ func (Parser) Parse(items chan Item) MonitFileParsed {
 			gid := <-items
 			monitFileParsed.CheckProcesses[0].StartProgram = api.CheckProgram{
 				Path: strings.Replace(pathValue.Value, `"`, "", -1),
-				Uid: strings.Replace(uid.Value, `"`, "", -1),
-				Gid: strings.Replace(gid.Value, `"`, "", -1),
+				Uid:  strings.Replace(uid.Value, `"`, "", -1),
+				Gid:  strings.Replace(gid.Value, `"`, "", -1),
 			}
 		case itemInsideCheckProcess_StopProgramMethod:
 			<-items
@@ -43,8 +43,8 @@ func (Parser) Parse(items chan Item) MonitFileParsed {
 			gid := <-items
 			monitFileParsed.CheckProcesses[0].StopProgram = api.CheckProgram{
 				Path: strings.Replace(pathValue.Value, `"`, "", -1),
-				Uid: strings.Replace(uid.Value, `"`, "", -1),
-				Gid: strings.Replace(gid.Value, `"`, "", -1),
+				Uid:  strings.Replace(uid.Value, `"`, "", -1),
+				Gid:  strings.Replace(gid.Value, `"`, "", -1),
 			}
 
 		}

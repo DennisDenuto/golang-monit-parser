@@ -3,9 +3,9 @@ package lex_test
 import (
 	. "github.com/DennisDenuto/golang-monit-parser/parse"
 
+	"github.com/DennisDenuto/golang-monit-parser/api"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/DennisDenuto/golang-monit-parser/api"
 )
 
 var _ = Describe("Parse", func() {
@@ -27,7 +27,6 @@ var _ = Describe("Parse", func() {
 				api.ProcessCheck{
 					Name:    "abc",
 					Pidfile: "/tmp",
-
 				},
 			))
 		})
@@ -48,13 +47,13 @@ var _ = Describe("Parse", func() {
 						Pidfile: "/tmp",
 						StartProgram: api.CheckProgram{
 							Path: "/usr/local/mmonit/bin/mmonit",
-							Uid: "mmonit",
-							Gid: "gmmonit",
+							Uid:  "mmonit",
+							Gid:  "gmmonit",
 						},
 						StopProgram: api.CheckProgram{
 							Path: "/usr/local/mmonit/bin/mmonit stop",
-							Uid: "mmonit",
-							Gid: "gmmonit",
+							Uid:  "mmonit",
+							Gid:  "gmmonit",
 						},
 					},
 				))

@@ -3,8 +3,8 @@ package lex
 import (
 	"fmt"
 	"strings"
-	"unicode/utf8"
 	"unicode"
+	"unicode/utf8"
 )
 
 type itemType int
@@ -111,7 +111,7 @@ func (l *lexer) current() (rune rune) {
 		return eof
 	}
 
-	rune, l.width = utf8.DecodeRuneInString(l.input[l.pos-1:l.pos])
+	rune, l.width = utf8.DecodeRuneInString(l.input[l.pos-1 : l.pos])
 	return rune
 }
 
