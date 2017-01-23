@@ -3,6 +3,7 @@ package lex
 import (
 	"github.com/DennisDenuto/golang-monit-parser/api"
 	"strings"
+	"strconv"
 )
 
 type Parser struct{}
@@ -50,8 +51,33 @@ func (Parser) Parse(items chan Item) MonitFileParsed {
 				Uid:  stripQuotes(uid.Value),
 				Gid:  stripQuotes(gid.Value),
 			}
+		case itemInsideCheckProcess_ConnectionTestingEnterIfConditions:
+			nextItem := <-items
+			switch nextItem.Type {
+			case itemInsideCheckProcess_ConnectionTesting_UnixSocket:
+				socketFilePath := <-items
+				<-items
+				timeout := <-items
+				<-items
+				timeoutValue, _ := strconv.Atoi(timeout.Value)
+
+				<-items
+				cycle := <-items
+				<-items
+				cycleValue, _ := strconv.Atoi(cycle.Value)
+
+				<-items
+				<-items
+				action := <-items
+
+				monitFileParsed.CheckProcesses.GetLast().FailedSocket.SocketFile = socketFilePath.Value
+				monitFileParsed.CheckProcesses.GetLast().FailedSocket.Timeout = timeoutValue
+				monitFileParsed.CheckProcesses.GetLast().FailedSocket.NumCycles = cycleValue
+				monitFileParsed.CheckProcesses.GetLast().FailedSocket.Action = action.Value
+			}
 
 		}
+
 	}
 
 	return monitFileParsed

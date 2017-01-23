@@ -167,7 +167,7 @@ func ServiceInsideCheckProcessMethods(l *lexer) stateFn {
 				l.ignore()
 
 				err := emitStringValue(l)
-				if err != nil{
+				if err != nil {
 					return l.errorf(err.Error())
 				}
 				return ServiceInsideCheckProcessMethods
@@ -189,7 +189,7 @@ func ServiceInsideCheckProcessMethods(l *lexer) stateFn {
 			l.skipWhiteSpaces()
 
 			err := emitStringValue(l)
-			if err != nil{
+			if err != nil {
 				return l.errorf(err.Error())
 			}
 			return ServiceInsideCheckProcessMethods
@@ -205,7 +205,7 @@ func ServiceInsideCheckProcessMethods(l *lexer) stateFn {
 			l.emit(itemInsideCheckProcess_ProgramMethodGid)
 			l.skipWhiteSpaces()
 			err := emitStringValue(l)
-			if err != nil{
+			if err != nil {
 				return l.errorf(err.Error())
 			}
 
@@ -225,7 +225,7 @@ func ServiceInsideCheckProcessMethods(l *lexer) stateFn {
 	}
 	if strings.HasPrefix(l.input[l.pos:], "if failed") {
 		l.pos += len("if failed")
-		l.emit(itemInsideCheckProcess_ConnectionTesting)
+		l.emit(itemInsideCheckProcess_ConnectionTestingEnterIfConditions)
 		l.skipWhiteSpaces()
 		return ServiceInsideCheckProcessConnectionTesting
 	}
@@ -245,6 +245,18 @@ func ServiceInsideCheckProcessConnectionTesting(l *lexer) stateFn {
 		return ServiceInsideCheckProcessInsideConnectionTesting
 	}
 
+	if strings.HasPrefix(l.input[l.pos:], "then ") {
+		l.acceptUntilSpace()
+		l.emit(itemInsideCheckProcess_ConnectionTesting_Action)
+		l.skipWhiteSpaces()
+		err := emitStringValue(l)
+		if err != nil {
+			return l.errorf(err.Error())
+		}
+		l.skipWhiteSpaces()
+		return ServiceInsideCheckProcessMethods
+	}
+
 	return nil
 }
 
@@ -254,13 +266,14 @@ func ServiceInsideCheckProcessInsideConnectionTesting(l *lexer) stateFn {
 		l.emit(itemInsideCheckProcess_ConnectionTesting_Timeout)
 		l.skipWhiteSpaces()
 		err := emitStringValue(l)
-		if err != nil{
+		if err != nil {
 			return l.errorf(err.Error())
 		}
 		err = emitStringValue(l)
-		if err != nil{
+		if err != nil {
 			return l.errorf(err.Error())
 		}
+		l.skipWhiteSpaces()
 
 		return ServiceInsideCheckProcessInsideConnectionTesting
 	}
@@ -277,9 +290,11 @@ func ServiceInsideCheckProcessInsideConnectionTesting(l *lexer) stateFn {
 		if err != nil {
 			return l.errorf(err.Error())
 		}
+		l.skipWhiteSpaces()
 		return ServiceInsideCheckProcessInsideConnectionTesting
 	}
-	return nil
+	l.emit(itemInsideCheckProcess_ConnectionTesting_ExitIfConditions)
+	return ServiceInsideCheckProcessConnectionTesting
 }
 
 /*

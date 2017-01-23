@@ -206,7 +206,7 @@ or:
 
 				Expect(nextLexFn).ToNot(BeNil())
 				nextLexFn = nextLexFn(lex)
-				Expect(lex.items).To(Receive(Equal(Item{Type: itemInsideCheckProcess_ConnectionTesting, Value: "if failed"})))
+				Expect(lex.items).To(Receive(Equal(Item{Type: itemInsideCheckProcess_ConnectionTestingEnterIfConditions, Value: "if failed"})))
 
 				Expect(nextLexFn).ToNot(BeNil())
 				nextLexFn = nextLexFn(lex)
@@ -224,6 +224,15 @@ or:
 				Expect(lex.items).To(Receive(Equal(Item{Type: itemInsideCheckProcess_ConnectionTesting_Cycle, Value: "for"})))
 				Expect(lex.items).To(Receive(Equal(Item{Type: itemInsideCheckProcess_ProgramMethodUnQuotedStringValue, Value: `5`})))
 				Expect(lex.items).To(Receive(Equal(Item{Type: itemInsideCheckProcess_ProgramMethodUnQuotedStringValue, Value: `cycles`})))
+
+				Expect(nextLexFn).ToNot(BeNil())
+				nextLexFn = nextLexFn(lex)
+				Expect(lex.items).To(Receive(Equal(Item{Type: itemInsideCheckProcess_ConnectionTesting_ExitIfConditions, Value: ""})))
+
+				Expect(nextLexFn).ToNot(BeNil())
+				nextLexFn = nextLexFn(lex)
+				Expect(lex.items).To(Receive(Equal(Item{Type: itemInsideCheckProcess_ConnectionTesting_Action, Value: "then"})))
+				Expect(lex.items).To(Receive(Equal(Item{Type: itemInsideCheckProcess_ProgramMethodUnQuotedStringValue, Value: `restart`})))
 
 				Expect(nextLexFn).ToNot(BeNil())
 				nextLexFn = nextLexFn(lex)
