@@ -23,7 +23,7 @@ const (
 )
 
 const (
-	itemError itemType = iota // error occurred;
+	itemError       itemType = iota // error occurred;
 	itemEOF
 	itemStringValue
 
@@ -44,6 +44,11 @@ const (
 
 	itemInsideCheckProcess_StopProgramMethod
 	itemInsideCheckProcess_ProgramMethodPath
+
+	itemInsideCheckProcess_ConnectionTesting
+	itemInsideCheckProcess_ConnectionTesting_UnixSocket
+	itemInsideCheckProcess_ConnectionTesting_Timeout
+	itemInsideCheckProcess_ConnectionTesting_Cycle
 
 	itemInsideCheckFile_Name
 	itemInsideCheckFile_Path
@@ -113,7 +118,7 @@ func (l *lexer) current() (rune rune) {
 		return eof
 	}
 
-	rune, l.width = utf8.DecodeRuneInString(l.input[l.pos-1 : l.pos])
+	rune, l.width = utf8.DecodeRuneInString(l.input[l.pos - 1: l.pos])
 	return rune
 }
 
@@ -169,7 +174,7 @@ func (l *lexer) acceptUntilEndOfLine() {
 func (l *lexer) acceptUntilSpace() {
 	for {
 		next := l.next()
-		if isSpace(next) || isEof(next) {
+		if isSpace(next) || isEof(next) || isEndOfLine(next) {
 			break
 		}
 	}
@@ -209,5 +214,5 @@ func isEof(r rune) bool {
 
 // isAlphaNumeric reports whether r is an alphabetic, digit, or underscore.
 func isAlphaNumeric(r rune) bool {
-	return r == '_' || unicode.IsLetter(r) || unicode.IsDigit(r)
+	return r == '/' || r == '_' || unicode.IsLetter(r) || unicode.IsDigit(r)
 }

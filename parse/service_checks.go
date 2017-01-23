@@ -2,6 +2,8 @@ package lex
 
 import (
 	"strings"
+	"fmt"
+	"errors"
 )
 
 func ServiceCheckStart(l *lexer) stateFn {
@@ -164,7 +166,11 @@ func ServiceInsideCheckProcessMethods(l *lexer) stateFn {
 				l.acceptRun(" =")
 				l.ignore()
 
-				return ServiceInsideCheckProcessMethodsStringValue
+				err := emitStringValue(l)
+				if err != nil{
+					return l.errorf(err.Error())
+				}
+				return ServiceInsideCheckProcessMethods
 			case isEndOfLine(nextRune) || isEof(nextRune):
 				return l.errorf("check process start missing '='", l.input[l.start:l.pos])
 			}
@@ -181,7 +187,12 @@ func ServiceInsideCheckProcessMethods(l *lexer) stateFn {
 			l.pos += len("uid")
 			l.emit(itemInsideCheckProcess_ProgramMethodUid)
 			l.skipWhiteSpaces()
-			return ServiceInsideCheckProcessMethodsStringValue
+
+			err := emitStringValue(l)
+			if err != nil{
+				return l.errorf(err.Error())
+			}
+			return ServiceInsideCheckProcessMethods
 		}
 	}
 	if strings.HasPrefix(l.input[l.pos:], "and") {
@@ -193,41 +204,106 @@ func ServiceInsideCheckProcessMethods(l *lexer) stateFn {
 			l.pos += len("gid")
 			l.emit(itemInsideCheckProcess_ProgramMethodGid)
 			l.skipWhiteSpaces()
-			return ServiceInsideCheckProcessMethodsStringValue
+			err := emitStringValue(l)
+			if err != nil{
+				return l.errorf(err.Error())
+			}
+
+			return ServiceInsideCheckProcessMethods
 		}
 	}
 	if strings.HasPrefix(l.input[l.pos:], "group") {
 		l.pos += len("group")
 		l.emit(itemInsideCheckProcess_ProgramMethodGroupName)
 		l.skipWhiteSpaces()
-		return ServiceInsideCheckProcessMethodsStringValue
+		err := emitStringValue(l)
+		if err != nil {
+			return l.errorf(err.Error())
+		}
+
+		return ServiceInsideCheckProcessMethods
+	}
+	if strings.HasPrefix(l.input[l.pos:], "if failed") {
+		l.pos += len("if failed")
+		l.emit(itemInsideCheckProcess_ConnectionTesting)
+		l.skipWhiteSpaces()
+		return ServiceInsideCheckProcessConnectionTesting
 	}
 	return nil
 }
 
+func ServiceInsideCheckProcessConnectionTesting(l *lexer) stateFn {
+	if strings.HasPrefix(l.input[l.pos:], "unixsocket ") {
+		l.acceptUntilSpace()
+		l.emit(itemInsideCheckProcess_ConnectionTesting_UnixSocket)
+		l.skipWhiteSpaces()
+		err := emitStringValue(l)
+		if err != nil {
+			return l.errorf(err.Error())
+		}
+		l.skipWhiteSpaces()
+		return ServiceInsideCheckProcessInsideConnectionTesting
+	}
+
+	return nil
+}
+
+func ServiceInsideCheckProcessInsideConnectionTesting(l *lexer) stateFn {
+	if strings.HasPrefix(l.input[l.pos:], "with timeout ") {
+		l.pos += len("with tineout")
+		l.emit(itemInsideCheckProcess_ConnectionTesting_Timeout)
+		l.skipWhiteSpaces()
+		err := emitStringValue(l)
+		if err != nil{
+			return l.errorf(err.Error())
+		}
+		err = emitStringValue(l)
+		if err != nil{
+			return l.errorf(err.Error())
+		}
+
+		return ServiceInsideCheckProcessInsideConnectionTesting
+	}
+
+	if strings.HasPrefix(l.input[l.pos:], "for ") {
+		l.acceptUntilSpace()
+		l.emit(itemInsideCheckProcess_ConnectionTesting_Cycle)
+		l.skipWhiteSpaces()
+		err := emitStringValue(l)
+		if err != nil {
+			return l.errorf(err.Error())
+		}
+		err = emitStringValue(l)
+		if err != nil {
+			return l.errorf(err.Error())
+		}
+		return ServiceInsideCheckProcessInsideConnectionTesting
+	}
+	return nil
+}
 
 /*
 Strings can be either quoted or unquoted. A quoted string is bounded by double quotes and may contain whitespace (and quoted digits are treated as a string). An unquoted string is any whitespace-delimited token, containing characters and/or numbers.
  */
-func ServiceInsideCheckProcessMethodsStringValue(l *lexer) stateFn {
+func emitStringValue(l *lexer) error {
 	next := l.next()
 	if next == '"' {
 		for {
 			switch nextRune := l.next(); {
 			case isEndOfLine(nextRune) || isEof(nextRune):
-				return l.errorf("check process missing value %s", l.input[l.pos:])
+				return errors.New(fmt.Sprintf("check process missing value %s", l.input[l.pos:]))
 			case nextRune == '"':
 				l.emit(itemInsideCheckProcess_ProgramMethodQuotedStringValue)
 				l.skipWhiteSpaces()
-				return ServiceInsideCheckProcessMethods
+				return nil
 			}
 		}
 	} else if isAlphaNumeric(next) {
 		l.acceptUntilSpace()
 		l.emit(itemInsideCheckProcess_ProgramMethodUnQuotedStringValue)
 		l.skipWhiteSpaces()
-		return ServiceInsideCheckProcessMethods
+		return nil
 	}
 
-	return ServiceInsideCheckProcessMethods
+	return nil
 }
