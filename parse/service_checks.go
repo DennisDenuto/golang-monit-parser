@@ -245,6 +245,42 @@ func ServiceInsideCheckProcessConnectionTesting(l *lexer) stateFn {
 		return ServiceInsideCheckProcessInsideConnectionTesting
 	}
 
+	if strings.HasPrefix(l.input[l.pos:], "host ") {
+		l.acceptUntilSpace()
+		l.emit(itemInsideCheckProcess_ConnectionTesting_TcpUdpHost)
+		l.skipWhiteSpaces()
+		err := emitStringValue(l)
+		if err != nil {
+			return l.errorf(err.Error())
+		}
+		l.skipWhiteSpaces()
+		return ServiceInsideCheckProcessConnectionTesting
+	}
+
+	if strings.HasPrefix(l.input[l.pos:], "port ") {
+		l.acceptUntilSpace()
+		l.emit(itemInsideCheckProcess_ConnectionTesting_TcpUdpPort)
+		l.skipWhiteSpaces()
+		err := emitStringValue(l)
+		if err != nil {
+			return l.errorf(err.Error())
+		}
+		l.skipWhiteSpaces()
+		return ServiceInsideCheckProcessConnectionTesting
+	}
+
+	if strings.HasPrefix(l.input[l.pos:], "protocol ") {
+		l.acceptUntilSpace()
+		l.emit(itemInsideCheckProcess_ConnectionTesting_TcpUdpProtocol)
+		l.skipWhiteSpaces()
+		err := emitStringValue(l)
+		if err != nil {
+			return l.errorf(err.Error())
+		}
+		l.skipWhiteSpaces()
+		return ServiceInsideCheckProcessConnectionTesting
+	}
+
 	if strings.HasPrefix(l.input[l.pos:], "then ") {
 		l.acceptUntilSpace()
 		l.emit(itemInsideCheckProcess_ConnectionTesting_Action)
@@ -257,7 +293,7 @@ func ServiceInsideCheckProcessConnectionTesting(l *lexer) stateFn {
 		return ServiceInsideCheckProcessMethods
 	}
 
-	return nil
+	return ServiceInsideCheckProcessInsideConnectionTesting
 }
 
 func ServiceInsideCheckProcessInsideConnectionTesting(l *lexer) stateFn {

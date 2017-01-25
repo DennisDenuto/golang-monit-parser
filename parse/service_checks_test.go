@@ -171,8 +171,9 @@ var _ = Describe("Lex/ServiceChecks", func() {
 
 			})
 		})
+
 		Context("With connection testing", func() {
-			It("should scan check process with service methods", func() {
+			It("should scan check process with socket test", func() {
 				lex := act(`check process abc matching foobar.*
   if failed unixsocket /path/to/socket.sock
     with timeout 5 seconds for 5 cycles
@@ -233,6 +234,73 @@ or:
 				nextLexFn = nextLexFn(lex)
 				Expect(lex.items).To(Receive(Equal(Item{Type: itemInsideCheckProcess_ConnectionTesting_Action, Value: "then"})))
 				Expect(lex.items).To(Receive(Equal(Item{Type: itemInsideCheckProcess_ProgramMethodUnQuotedStringValue, Value: `restart`})))
+
+				Expect(nextLexFn).ToNot(BeNil())
+				nextLexFn = nextLexFn(lex)
+				Expect(nextLexFn).To(BeNil())
+			})
+
+			It("should scan check process with host test", func() {
+				lex := act(`check process abc matching foobar.*
+  if failed host 1.2.3.4 port 9876 protocol http with timeout 20 seconds for 10 cycles
+  then stop`)
+
+				nextLexFn := ServiceCheckStart(lex)
+				Expect(lex.items).To(Receive())
+
+				nextLexFn = nextLexFn(lex)
+				Expect(lex.items).To(Receive())
+
+				nextLexFn = nextLexFn(lex)
+				Expect(lex.items).To(Receive())
+
+				nextLexFn = nextLexFn(lex)
+				Expect(lex.items).To(Receive())
+
+				Expect(nextLexFn).ToNot(BeNil())
+				nextLexFn = nextLexFn(lex)
+				Expect(lex.items).To(Receive(Equal(Item{Type: itemInsideCheckProcess_ConnectionTestingEnterIfConditions, Value: "if failed"})))
+
+				Expect(nextLexFn).ToNot(BeNil())
+				nextLexFn = nextLexFn(lex)
+				Expect(lex.items).To(Receive(Equal(Item{Type: itemInsideCheckProcess_ConnectionTesting_TcpUdpHost, Value: "host"})))
+				Expect(lex.items).To(Receive(Equal(Item{Type: itemInsideCheckProcess_ProgramMethodUnQuotedStringValue, Value: `1.2.3.4`})))
+
+				Expect(nextLexFn).ToNot(BeNil())
+				nextLexFn = nextLexFn(lex)
+				Expect(lex.items).To(Receive(Equal(Item{Type: itemInsideCheckProcess_ConnectionTesting_TcpUdpPort, Value: "port"})))
+				Expect(lex.items).To(Receive(Equal(Item{Type: itemInsideCheckProcess_ProgramMethodUnQuotedStringValue, Value: `9876`})))
+
+				Expect(nextLexFn).ToNot(BeNil())
+				nextLexFn = nextLexFn(lex)
+				Expect(lex.items).To(Receive(Equal(Item{Type: itemInsideCheckProcess_ConnectionTesting_TcpUdpProtocol, Value: "protocol"})))
+				Expect(lex.items).To(Receive(Equal(Item{Type: itemInsideCheckProcess_ProgramMethodUnQuotedStringValue, Value: `http`})))
+
+				Expect(nextLexFn).ToNot(BeNil())
+				nextLexFn = nextLexFn(lex)
+				Expect(nextLexFn).ToNot(BeNil())
+				nextLexFn = nextLexFn(lex)
+
+				Expect(lex.items).To(Receive(Equal(Item{Type: itemInsideCheckProcess_ConnectionTesting_Timeout, Value: "with timeout"})))
+				Expect(lex.items).To(Receive(Equal(Item{Type: itemInsideCheckProcess_ProgramMethodUnQuotedStringValue, Value: `20`})))
+				Expect(lex.items).To(Receive(Equal(Item{Type: itemInsideCheckProcess_ProgramMethodUnQuotedStringValue, Value: `seconds`})))
+
+				Expect(nextLexFn).ToNot(BeNil())
+				nextLexFn = nextLexFn(lex)
+				Expect(nextLexFn).ToNot(BeNil())
+
+				Expect(lex.items).To(Receive(Equal(Item{Type: itemInsideCheckProcess_ConnectionTesting_Cycle, Value: "for"})))
+				Expect(lex.items).To(Receive(Equal(Item{Type: itemInsideCheckProcess_ProgramMethodUnQuotedStringValue, Value: `10`})))
+				Expect(lex.items).To(Receive(Equal(Item{Type: itemInsideCheckProcess_ProgramMethodUnQuotedStringValue, Value: `cycles`})))
+
+				Expect(nextLexFn).ToNot(BeNil())
+				nextLexFn = nextLexFn(lex)
+				Expect(lex.items).To(Receive(Equal(Item{Type: itemInsideCheckProcess_ConnectionTesting_ExitIfConditions, Value: ""})))
+
+				Expect(nextLexFn).ToNot(BeNil())
+				nextLexFn = nextLexFn(lex)
+				Expect(lex.items).To(Receive(Equal(Item{Type: itemInsideCheckProcess_ConnectionTesting_Action, Value: "then"})))
+				Expect(lex.items).To(Receive(Equal(Item{Type: itemInsideCheckProcess_ProgramMethodUnQuotedStringValue, Value: `stop`})))
 
 				Expect(nextLexFn).ToNot(BeNil())
 				nextLexFn = nextLexFn(lex)
