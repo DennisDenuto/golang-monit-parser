@@ -115,7 +115,8 @@ var _ = Describe("Lex/ServiceChecks", func() {
   start program = "/usr/local/mmonit/bin/mmonit" as uid "mmonit" and gid "mmonit"
   stop program = "/usr/local/mmonit/bin/mmonit stop" as uid "stop_mmonit" and gid "stop_mmonit"
   group group_name
-  depends on file_check`)
+  depends on file_check
+  if total memory > 2048 Mb for 3 cycles then alert`)
 
 				nextLexFn := ServiceCheckStart(lex)
 				Expect(lex.items).To(Receive())
@@ -175,6 +176,27 @@ var _ = Describe("Lex/ServiceChecks", func() {
 				Expect(lex.items).To(Receive(Equal(Item{Type: itemServiceDependencies, Value: "depends on"})))
 				Expect(lex.items).To(Receive(Equal(Item{Type: itemInsideCheckProcess_ProgramMethodUnQuotedStringValue, Value: "file_check"})))
 
+				Expect(nextLexFn).ToNot(BeNil())
+				nextLexFn = nextLexFn(lex)
+				Expect(lex.items).To(Receive(Equal(Item{Type: itemInsideCheckResourceTesting, Value: "if total memory"})))
+
+
+				Expect(nextLexFn).ToNot(BeNil())
+				nextLexFn = nextLexFn(lex)
+				Expect(lex.items).To(Receive(Equal(Item{Type: itemInsideCheckResourceTestingOperator, Value: ">"})))
+				Expect(lex.items).To(Receive(Equal(Item{Type: itemInsideCheckProcess_ProgramMethodUnQuotedStringValue, Value: "2048 Mb"})))
+
+				Expect(nextLexFn).ToNot(BeNil())
+				nextLexFn = nextLexFn(lex)
+
+				Expect(lex.items).To(Receive(Equal(Item{Type: itemInsideCheckProcess_ConnectionTesting_Cycle, Value: "for"})))
+				Expect(lex.items).To(Receive(Equal(Item{Type: itemInsideCheckProcess_ProgramMethodUnQuotedStringValue, Value: `3`})))
+				Expect(lex.items).To(Receive(Equal(Item{Type: itemInsideCheckProcess_ProgramMethodUnQuotedStringValue, Value: `cycles`})))
+
+				Expect(nextLexFn).ToNot(BeNil())
+				nextLexFn = nextLexFn(lex)
+				Expect(lex.items).To(Receive(Equal(Item{Type: itemInsideCheckProcess_ConnectionTesting_Action, Value: "then"})))
+				Expect(lex.items).To(Receive(Equal(Item{Type: itemInsideCheckProcess_ProgramMethodUnQuotedStringValue, Value: `alert`})))
 			})
 		})
 

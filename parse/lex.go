@@ -33,6 +33,8 @@ const (
 	itemCheckFile
 
 	itemServiceDependencies
+	itemInsideCheckResourceTesting
+	itemInsideCheckResourceTestingOperator
 
 	itemInsideCheckProcess_Name
 	itemInsideCheckProcess_Pid
@@ -165,6 +167,12 @@ func (l *lexer) accept(valid string) bool {
 // acceptRun consumes a run of runes from the valid set.
 func (l *lexer) acceptRun(valid string) {
 	for strings.IndexRune(valid, l.next()) >= 0 {
+	}
+	l.backup()
+}
+
+func (l *lexer) acceptNumbers() {
+	for unicode.IsNumber(l.next()) {
 	}
 	l.backup()
 }

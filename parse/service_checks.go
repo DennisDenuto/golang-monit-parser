@@ -240,7 +240,48 @@ func ServiceInsideCheckProcessMethods(l *lexer) stateFn {
 		l.skipWhiteSpaces()
 		return ServiceInsideCheckProcessConnectionTesting
 	}
+	if strings.HasPrefix(l.input[l.pos:], "if total memory") {
+		l.pos += len("if total memory")
+		l.emit(itemInsideCheckResourceTesting)
+		l.skipWhiteSpaces()
+		return InsideCheckResourceTesting
+	}
 	return nil
+}
+
+func InsideCheckResourceTesting(l *lexer) stateFn {
+
+	if l.accept("><=") {
+		l.accept("><=")
+		l.emit(itemInsideCheckResourceTestingOperator)
+
+		l.skipWhiteSpaces()
+		l.acceptNumbers()
+		l.acceptRun(" ")
+		l.acceptRun("%kmgbKMGB")
+		l.emit(itemInsideCheckProcess_ProgramMethodUnQuotedStringValue)
+		l.skipWhiteSpaces()
+
+		return InsideCheckResourceTesting
+	}
+
+	if strings.HasPrefix(l.input[l.pos:], "for ") {
+		l.acceptUntilSpace()
+		l.emit(itemInsideCheckProcess_ConnectionTesting_Cycle)
+		l.skipWhiteSpaces()
+		err := emitStringValue(l)
+		if err != nil {
+			return l.errorf(err.Error())
+		}
+		err = emitStringValue(l)
+		if err != nil {
+			return l.errorf(err.Error())
+		}
+		l.skipWhiteSpaces()
+		return InsideCheckResourceTesting
+	}
+
+	return ServiceInsideCheckProcessConnectionTesting
 }
 
 func ServiceInsideCheckProcessConnectionTesting(l *lexer) stateFn {
