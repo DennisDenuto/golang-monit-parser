@@ -114,7 +114,8 @@ var _ = Describe("Lex/ServiceChecks", func() {
 				lex := act(`check process abc matching foobar.*
   start program = "/usr/local/mmonit/bin/mmonit" as uid "mmonit" and gid "mmonit"
   stop program = "/usr/local/mmonit/bin/mmonit stop" as uid "stop_mmonit" and gid "stop_mmonit"
-  group group_name`)
+  group group_name
+  depends on file_check`)
 
 				nextLexFn := ServiceCheckStart(lex)
 				Expect(lex.items).To(Receive())
@@ -168,6 +169,11 @@ var _ = Describe("Lex/ServiceChecks", func() {
 
 				Expect(lex.items).To(Receive(Equal(Item{Type: itemInsideCheckProcess_ProgramMethodGroupName, Value: "group"})))
 				Expect(lex.items).To(Receive(Equal(Item{Type: itemInsideCheckProcess_ProgramMethodUnQuotedStringValue, Value: "group_name"})))
+
+				Expect(nextLexFn).ToNot(BeNil())
+				nextLexFn = nextLexFn(lex)
+				Expect(lex.items).To(Receive(Equal(Item{Type: itemServiceDependencies, Value: "depends on"})))
+				Expect(lex.items).To(Receive(Equal(Item{Type: itemInsideCheckProcess_ProgramMethodUnQuotedStringValue, Value: "file_check"})))
 
 			})
 		})

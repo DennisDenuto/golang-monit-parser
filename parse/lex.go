@@ -32,6 +32,8 @@ const (
 	itemCheckProcess
 	itemCheckFile
 
+	itemServiceDependencies
+
 	itemInsideCheckProcess_Name
 	itemInsideCheckProcess_Pid
 	itemInsideCheckProcess_ProgramMethodQuotedStringValue

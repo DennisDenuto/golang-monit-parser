@@ -223,6 +223,17 @@ func ServiceInsideCheckProcessMethods(l *lexer) stateFn {
 
 		return ServiceInsideCheckProcessMethods
 	}
+	if strings.HasPrefix(l.input[l.pos:], "depends on") {
+		l.pos += len("depends on")
+		l.emit(itemServiceDependencies)
+		l.skipWhiteSpaces()
+		err := emitStringValue(l)
+		if err != nil {
+			return l.errorf(err.Error())
+		}
+
+		return ServiceInsideCheckProcessMethods
+	}
 	if strings.HasPrefix(l.input[l.pos:], "if failed") {
 		l.pos += len("if failed")
 		l.emit(itemInsideCheckProcess_ConnectionTestingEnterIfConditions)
